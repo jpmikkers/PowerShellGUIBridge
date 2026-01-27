@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "AvaloniaNamedPipe": {
+      "commandName": "Project",
+      "commandLineArgs": "plop"
+    },
+    "Profile 1": {
+      "commandName": "Executable"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}
