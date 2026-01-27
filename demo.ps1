@@ -1,12 +1,11 @@
 #requires -version 7.4
 
-using module .\AvaloniaBridge.psd1
-# Import-Module "$(Split-Path $MyInvocation.MyCommand.Path)\spiritus.psm1" -Force # -Verbose
+using module .\GUIBridge.psd1
 
 function Paint-StrokeThickness
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [double]$thickness
     )
     $bridge.PostCommand("StrokeThickness", $thickness)
@@ -15,7 +14,7 @@ function Paint-StrokeThickness
 function Paint-StrokeBrush
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [byte]$a,
         [byte]$r,
         [byte]$g,
@@ -33,7 +32,7 @@ function Paint-StrokeBrush
 function Paint-FillBrush
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [byte]$a,
         [byte]$r,
         [byte]$g,
@@ -51,7 +50,7 @@ function Paint-FillBrush
 function Paint-Sync
 {
     param (
-        [AvaloniaBridge]$bridge
+        [GUIBridge]$bridge
     )
     $null = $bridge.InvokeCommand("Sync", $null)
 }
@@ -59,7 +58,7 @@ function Paint-Sync
 function Paint-Info
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [string]$info
     )
     $bridge.PostCommand("Info", $info)
@@ -68,7 +67,7 @@ function Paint-Info
 function Paint-Line
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [double]$x1,
         [double]$y1,
         [double]$x2,
@@ -86,7 +85,7 @@ function Paint-Line
 function Paint-Rectangle
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [double]$x,
         [double]$y,
         [double]$w,
@@ -108,7 +107,7 @@ function Paint-Rectangle
 function Dialog-OpenFile
 {
     param (
-        [AvaloniaBridge]$bridge,
+        [GUIBridge]$bridge,
         [string]$title = "Open File",
         [string]$location = $null,
         [bool]$allowMultiple = $false
@@ -129,8 +128,8 @@ function Dialog-OpenFile
 
 try
 {
-    $avaloniaBridge = [AvaloniaBridge]::new()
-    Dialog-OpenFile -bridge $avaloniaBridge -title "Select a File" -location "C:\" -allowMultiple $true
+    $GUIBridge = [GUIBridge]::new()
+    Dialog-OpenFile -bridge $GUIBridge -title "Select a File" -location "C:\" -allowMultiple $true
 
         "Dialog test complete. Starting drawing..."
 
@@ -138,28 +137,28 @@ try
 
     while($i -lt 10000)
     {
-        Paint-StrokeThickness -bridge $avaloniaBridge -thickness (Get-Random -Minimum 1 -Maximum 20)
+        Paint-StrokeThickness -bridge $GUIBridge -thickness (Get-Random -Minimum 1 -Maximum 20)
 
-        Paint-StrokeBrush -bridge $avaloniaBridge -a 255 -r (Get-Random -Minimum 0 -Maximum 255) -g (Get-Random -Minimum 0 -Maximum 255) -b (Get-Random -Minimum 0 -Maximum 255)
+        Paint-StrokeBrush -bridge $GUIBridge -a 255 -r (Get-Random -Minimum 0 -Maximum 255) -g (Get-Random -Minimum 0 -Maximum 255) -b (Get-Random -Minimum 0 -Maximum 255)
 
-        Paint-FillBrush -bridge $avaloniaBridge -a 255 -r (Get-Random -Minimum 0 -Maximum 255) -g (Get-Random -Minimum 0 -Maximum 255) -b (Get-Random -Minimum 0 -Maximum 255)
+        Paint-FillBrush -bridge $GUIBridge -a 255 -r (Get-Random -Minimum 0 -Maximum 255) -g (Get-Random -Minimum 0 -Maximum 255) -b (Get-Random -Minimum 0 -Maximum 255)
 
-        Paint-Line -bridge $avaloniaBridge -x1 (Get-Random -Minimum 0 -Maximum 1000) -y1 (Get-Random -Minimum 0 -Maximum 1000) -x2 (Get-Random -Minimum 0 -Maximum 1000) -y2 (Get-Random -Minimum 0 -Maximum 1000)
+        Paint-Line -bridge $GUIBridge -x1 (Get-Random -Minimum 0 -Maximum 1000) -y1 (Get-Random -Minimum 0 -Maximum 1000) -x2 (Get-Random -Minimum 0 -Maximum 1000) -y2 (Get-Random -Minimum 0 -Maximum 1000)
 
-        Paint-Rectangle -bridge $avaloniaBridge -x (Get-Random -Minimum 0 -Maximum 1000) -y (Get-Random -Minimum 0 -Maximum 1000) -w (Get-Random -Minimum 50 -Maximum 500) -h (Get-Random -Minimum 50 -Maximum 500)
+        Paint-Rectangle -bridge $GUIBridge -x (Get-Random -Minimum 0 -Maximum 1000) -y (Get-Random -Minimum 0 -Maximum 1000) -w (Get-Random -Minimum 50 -Maximum 500) -h (Get-Random -Minimum 50 -Maximum 500)
 
-        Paint-Sync -bridge $avaloniaBridge
+        Paint-Sync -bridge $GUIBridge
 
         $i = $i + 1
-        Paint-Info -bridge $avaloniaBridge -info "Shapes drawn: $i"
+        Paint-Info -bridge $GUIBridge -info "Shapes drawn: $i"
         #Start-Sleep -Milliseconds 0
     }
 }
 finally
 {
-    if($avaloniaBridge -ne $null)
+    if($GUIBridge -ne $null)
     {
-        $avaloniaBridge.Dispose()
+        $GUIBridge.Dispose()
         "Avalonia bridge disposed."
     }
 }
