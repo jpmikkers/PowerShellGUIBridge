@@ -18,10 +18,11 @@ try
         @{ Name = 'All Files'; Extensions = @('*.*') }
     )
 
-    Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+    $imageFiles = Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+    "selected image files: $imageFiles"
 }
 finally
 {
-    Close-GUIBridge -GUIBridge $GUIBridge
+    Close-GUIBridge -bridge $GUIBridge
 }
 ```
