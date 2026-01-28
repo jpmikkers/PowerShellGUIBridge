@@ -11,17 +11,21 @@ try
         @{ Name = 'All Files'; Extensions = @('*.*') }
     )
 
-    Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+    $imageFiles = Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+
+    "selected image files: $imageFiles"
 
     $textFileFilters = @(
         @{ Name = 'Text Files'; Extensions = @('*.txt', '*.md') },
         @{ Name = 'All Files'; Extensions = @('*.*') }
     )
 
-    Invoke-SaveFileDialog -bridge $GUIBridge -title "Save text file" -location "C:\" -SuggestedFileName "howdiedo.txt" -showOverwritePrompt $true -filters $textFileFilters
+    $textFile = Invoke-SaveFileDialog -bridge $GUIBridge -title "Save text file" -location "C:\" -SuggestedFileName "howdiedo.txt" -showOverwritePrompt $true -filters $textFileFilters
+
+    "save text file as: $textFile"
 }
 finally
 {
-    Close-GUIBridge -GUIBridge $GUIBridge
+    Close-GUIBridge -bridge $GUIBridge
     "closed GUIBridge."
 }

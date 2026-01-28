@@ -22,24 +22,6 @@ using GuiWorker;
 
 namespace GuiWorker.ViewModels;
 
-public class MyCustomClass
-{
-    public string Name { get; set; } = "";
-    public int Age { get; set; }
-}
-
-public record class SPLine(double x1,double y1,double x2,double y2);
-
-public record class SPRectangle(double x, double y, double w, double h, double? radiusX, double? radiusY);
-
-public record class SPBrush
-{
-    public byte A { get; set; }
-    public byte R { get; set; }
-    public byte G { get; set; }
-    public byte B { get; set; }
-}
-
 public record class SPFileFilter
 {
     public string? Name { get; set; }
@@ -133,77 +115,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         switch (message.Command)
         {
-            case "FillBrush":
-                {
-                    var spbrush = message.Payload.Deserialize<SPBrush>();
-                    if (spbrush is not null)
-                    {
-                        _fillBrush = new ImmutableSolidColorBrush(new Color(spbrush.A, spbrush.R, spbrush.G, spbrush.B));
-                    }
-                }
-                break;
-
-            case "StrokeBrush":
-                {
-                    var spbrush = message.Payload.Deserialize<SPBrush>();
-                    if (spbrush is not null)
-                    {
-                        _strokeBrush = new ImmutableSolidColorBrush(new Color(spbrush.A, spbrush.R, spbrush.G, spbrush.B));
-                    }
-                }
-                break;
-
-            case "StrokeThickness":
-                {
-                    var spthickness = message.Payload.Deserialize<double?>();
-                    _strokeThickness = spthickness ?? 1.0;
-                }
-                break;
-
-            case "Line":
-                {
-                    var spline = message.Payload.Deserialize<SPLine>();
-                    if (spline is not null)
-                    {
-                        var line = new Line()
-                        {
-                            StartPoint = new Avalonia.Point(spline.x1, spline.y1),
-                            EndPoint = new Avalonia.Point(spline.x2, spline.y2),
-                            Fill = _fillBrush,
-                            Stroke = _strokeBrush,
-                            StrokeThickness = _strokeThickness
-                        };
-
-                        _mainWindow.MyCanvas.Children.Add(line);
-                    }
-                }
-                break;
-
-            case "Rectangle":
-                {
-                    var sprect = message.Payload.Deserialize<SPRectangle>();
-
-                    if (sprect is not null)
-                    {
-                        var rect = new Rectangle()
-                        {
-                            Width = sprect.w,
-                            Height = sprect.h,
-                            RadiusX = sprect.radiusX ?? 0.0,
-                            RadiusY = sprect.radiusY ?? 0.0,
-                            Fill = _fillBrush,
-                            Stroke = _strokeBrush,
-                            StrokeThickness = _strokeThickness
-                        };
-
-                        Canvas.SetLeft(rect, sprect.x);
-                        Canvas.SetTop(rect, sprect.y);
-
-                        _mainWindow.MyCanvas.Children.Add(rect);
-                    }
-                }
-                break;
-
             case "Clear":
                 _mainWindow.MyCanvas.Children.Clear();
                 break;
@@ -297,6 +208,9 @@ public partial class MainWindowViewModel : ViewModelBase
                     }
                 }
                 break;
+
+            default:
+                throw new InvalidOperationException($"Unknown command: {message.Command}");
         }
         return result;
     }

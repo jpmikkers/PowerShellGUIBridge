@@ -74,7 +74,16 @@ class GUIBridge
         }
         $messageJson = $message | ConvertTo-Json -Compress -Depth 10
         $responseJson = $this.pipe.InvokeMessage($messageJson)
-        return $responseJson | ConvertFrom-Json -Depth 10
+        $result = ($responseJson | ConvertFrom-Json -Depth 10)
+
+        if($result.Response -eq 'ok')
+        {
+            return $result.Payload
+        }
+        else
+        {
+            throw "InvokeCommand '$command' failed : $($result.Payload)"
+        }
     }
 }
 

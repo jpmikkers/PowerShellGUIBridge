@@ -62,18 +62,24 @@ public class SpiritusNamedPipeClient
         try
         {
             var spiritusMessage = JsonSerializer.Deserialize<SpiritusMessage>(messageJson);
-            if (spiritusMessage != null && InvokeMessageReceived != null)
-            {
-                var response = await InvokeMessageReceived(spiritusMessage);
-                return JsonSerializer.Serialize(response);
-            }
-        }
-        catch
-        {
-            // Handle JSON deserialization error
-        }
 
-        var errorResponse = new SpiritusResponse { Response = "error" };
-        return JsonSerializer.Serialize(errorResponse);
+            if(spiritusMessage is null)
+            {
+                throw new InvalidOperationException("Deserialized message is null");
+            }
+
+            if (InvokeMessageReceived is null)
+            {
+                throw new InvalidOperationException("Message handler not hooked up");
+            }
+
+            var response = await InvokeMessageReceived(spiritusMessage);
+            return JsonSerializer.Serialize(response);
+        }
+        catch(Exception ex)
+        {
+            var errorResponse = new SpiritusResponse { Response = "error", Payload = ex.Message };
+            return JsonSerializer.Serialize(errorResponse);
+        }
     }
 }

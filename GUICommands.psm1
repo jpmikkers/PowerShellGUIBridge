@@ -125,7 +125,7 @@ function Invoke-OpenFileDialog
         Filters = $filters
     }
 
-    $v = $bridge.InvokeCommand("ShowOpenFileDialog",$payload)
+    return $bridge.InvokeCommand("ShowOpenFileDialog",$payload)
 }
 
 function Invoke-SaveFileDialog
@@ -149,7 +149,7 @@ function Invoke-SaveFileDialog
         Filters = $filters 
     }
 
-    $v = $bridge.InvokeCommand("ShowSaveFileDialog",$payload)
+    return $bridge.InvokeCommand("ShowSaveFileDialog",$payload)
 }
 
 # see https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/ why we need these
