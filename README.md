@@ -7,26 +7,21 @@ The demo script (demo.ps1) shows how to call open and save file dialogs from pow
 # Example
 
 ```powershell
-using module .\GUIBridge.psd1
-
-# ... snip ...
+using module .\GUICommands.psd1
 
 try
 {
-    $GUIBridge = [GUIBridge]::new()
+    $GUIBridge = New-GUIBridge
 
     $imageFileFilters = @( 
         @{ Name = 'Images'; Extensions = @('*.jpg', '*.jpeg', '*.bmp') },
         @{ Name = 'All Files'; Extensions = @('*.*') }
     )
 
-    Dialog-OpenFile -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+    Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
 }
 finally
 {
-    if($GUIBridge -ne $null)
-    {
-        $GUIBridge.Dispose()
-    }
+    Close-GUIBridge -GUIBridge $GUIBridge
 }
 ```
