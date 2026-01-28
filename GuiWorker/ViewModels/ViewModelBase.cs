@@ -3,7 +3,7 @@ using System.IO.Pipes;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 
-namespace AvaloniaNamedPipe.ViewModels;
+namespace GuiWorker.ViewModels;
 public partial class ViewModelBase : ObservableObject
 {
     public ViewModelBase()

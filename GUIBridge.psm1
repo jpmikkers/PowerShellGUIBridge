@@ -116,15 +116,15 @@ class GUIBridge
 
         if($global:IsWindows)
         {
-            $exePath = './binaries/win-x64/AvaloniaNamedPipe.exe'
+            $exePath = './binaries/win-x64/GuiWorker.exe'
         }
         elseif($global:IsMacOS)
         {
-            $exePath = './binaries/osx-x64/AvaloniaNamedPipe'
+            $exePath = './binaries/osx-x64/GuiWorker'
         }
         elseif($global:IsLinux)
         {
-            $exePath = './binaries/linux-x64/AvaloniaNamedPipe'
+            $exePath = './binaries/linux-x64/GuiWorker'
         }
         else
         {

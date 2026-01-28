@@ -3,9 +3,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using GuiWorker.ViewModels;
 using Microsoft.Extensions.Hosting;
 
-namespace AvaloniaNamedPipe.ViewModels;
+namespace GuiWorker;
 
 public class SpiritusMessage
 {
@@ -21,13 +22,13 @@ public class SpiritusResponse
 
 public class SpiritusNamedPipeClient
 {
-    private readonly NamedPipeClient _namedPipeClient;
+    private readonly NamedPipeClientService _namedPipeClient;
 
     public event Action<string>? StateChanged;
     public event Func<SpiritusMessage, Task>? PostMessageReceived;
     public event Func<SpiritusMessage, Task<SpiritusResponse>>? InvokeMessageReceived;
 
-    public SpiritusNamedPipeClient(NamedPipeClient namedPipeClient)
+    public SpiritusNamedPipeClient(NamedPipeClientService namedPipeClient)
     {
         _namedPipeClient = namedPipeClient;
         _namedPipeClient.StateChanged += OnStateChanged;

@@ -1,11 +1,11 @@
 <Window
-    x:Class="AvaloniaNamedPipe.Views.MainWindow"
+    x:Class="GuiWorker.Views.MainWindow"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="using:AvaloniaNamedPipe.ViewModels"
-    Title="AvaloniaNamedPipe"
+    xmlns:vm="using:GuiWorker.ViewModels"
+    Title="GuiWorker"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:MainWindowViewModel"
@@ -42,7 +42,7 @@
             VerticalAlignment="Center"
             Content="{Binding Info}"
             DockPanel.Dock="Top" />
-        <!--    <Label DockPanel.Dock="Top" Content="{Binding LastMessage}" HorizontalAlignment="Center" VerticalAlignment="Center"/>        -->    
+        <!--    <Label DockPanel.Dock="Top" Content="{Binding LastMessage}" HorizontalAlignment="Center" VerticalAlignment="Center"/>        -->
         <Canvas Name="MyCanvas" />
     </DockPanel>
 

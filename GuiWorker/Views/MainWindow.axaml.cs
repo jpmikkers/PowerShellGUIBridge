@@ -1,8 +1,8 @@
 using System;
 using Avalonia.Controls;
-using AvaloniaNamedPipe.ViewModels;
+using GuiWorker.ViewModels;
 
-namespace AvaloniaNamedPipe.Views;
+namespace GuiWorker.Views;
 public partial class MainWindow : Window
 {
     public MainWindow()

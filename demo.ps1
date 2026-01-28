@@ -110,29 +110,59 @@ function Dialog-OpenFile
         [GUIBridge]$bridge,
         [string]$title = "Open File",
         [string]$location = $null,
-        [bool]$allowMultiple = $false
+        [bool]$allowMultiple = $false,
+        $filters
     )
     $payload = @{
         Title = $title
-        Location = $location
+        SuggestedStartLocation = $location
         AllowMultiple = $allowMultiple
-        Filters = @( 
-            @{ Name = 'Images'; Extensions = @('*.jpg', '*.jpeg', '*.bmp') },
-            @{ Name = 'All Files'; Extensions = @('*.*') }
-        )
+        Filters = $filters
     }
 
-    $v = $bridge.InvokeCommand("OpenFile",$payload)
-    $v
+    $v = $bridge.InvokeCommand("ShowOpenFileDialog",$payload)
+}
+
+function Dialog-SaveFile
+{
+    param (
+        [GUIBridge]$bridge,
+        [string]$title = "Save File",
+        [string]$location = $null,
+        [string]$suggestedFileName = $null,
+        [bool]$showOverwritePrompt = $false,
+        $filters
+    )
+    $payload = @{
+        Title = $title
+        SuggestedStartLocation = $location
+        SuggestedFileName = $suggestedFileName
+        ShowOverwritePrompt = $showOverwritePrompt
+        Filters = $filters 
+    }
+
+    $v = $bridge.InvokeCommand("ShowSaveFileDialog",$payload)
 }
 
 try
 {
     $GUIBridge = [GUIBridge]::new()
-    Dialog-OpenFile -bridge $GUIBridge -title "Select a File" -location "C:\" -allowMultiple $true
 
-        "Dialog test complete. Starting drawing..."
+    $imageFileFilters = @( 
+        @{ Name = 'Images'; Extensions = @('*.jpg', '*.jpeg', '*.bmp') },
+        @{ Name = 'All Files'; Extensions = @('*.*') }
+    )
 
+    Dialog-OpenFile -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+
+    $textFileFilters = @(
+        @{ Name = 'Text Files'; Extensions = @('*.txt', '*.md') },
+        @{ Name = 'All Files'; Extensions = @('*.*') }
+    )
+
+    Dialog-SaveFile -bridge $GUIBridge -title "Save text file" -location "C:\" -SuggestedFileName "howdiedo.txt" -showOverwritePrompt $true -filters $textFileFilters
+
+<#
     $i = 0
 
     while($i -lt 10000)
@@ -153,6 +183,7 @@ try
         Paint-Info -bridge $GUIBridge -info "Shapes drawn: $i"
         #Start-Sleep -Milliseconds 0
     }
+#>
 }
 finally
 {

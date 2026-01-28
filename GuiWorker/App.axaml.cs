@@ -3,10 +3,10 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
-using AvaloniaNamedPipe.ViewModels;
-using AvaloniaNamedPipe.Views;
+using GuiWorker.ViewModels;
+using GuiWorker.Views;
 
-namespace AvaloniaNamedPipe;
+namespace GuiWorker;
 public partial class App : Application
 {
     public override void Initialize()

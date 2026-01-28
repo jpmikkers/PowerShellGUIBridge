@@ -15,11 +15,12 @@ using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using AvaloniaNamedPipe.Views;
+using GuiWorker.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GuiWorker;
 
-namespace AvaloniaNamedPipe.ViewModels;
+namespace GuiWorker.ViewModels;
 
 public class MyCustomClass
 {
@@ -45,11 +46,32 @@ public record class SPFileFilter
     public List<string>? Extensions { get; set; }
 }
 
-public record class SPOpenFile
+public record class SPOpenFileDialog
 {
     public string? Title { get; set; }
-    public string? Location { get; set; }
+    public string? SuggestedStartLocation { get; set; }
     public bool? AllowMultiple { get; set; }
+    public List<SPFileFilter>? Filters { get; set; }
+}
+
+public record class SPSaveFileDialog
+{
+    public string? Title { get; set; }
+    public string? SuggestedStartLocation { get; set; }
+    public string? DefaultExtension { get; set; }
+
+    public string? SuggestedFileName
+    {
+        get; set;
+    }
+
+    public string? SuggestedFileType
+    {
+        get; set;
+    }
+
+    public bool? ShowOverwritePrompt { get; set; }
+
     public List<SPFileFilter>? Filters { get; set; }
 }
 
@@ -80,7 +102,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public string[]? Args { get; set; }
 
-    private NamedPipeClient? _pipeClient;
+    private NamedPipeClientService? _pipeClient;
     private SpiritusNamedPipeClient? _spiritusClient;
     private MainWindow _mainWindow = default!;
     private readonly ConcurrentQueue<SpiritusMessage> _messageQueue = new();
@@ -94,7 +116,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _mainWindow = mainWindow;
         if (Args is not null && Args.Length > 0)
         {
-            _pipeClient = new NamedPipeClient(Args[0], TimeSpan.FromSeconds(10.0));
+            _pipeClient = new NamedPipeClientService(Args[0], TimeSpan.FromSeconds(10.0));
             _spiritusClient = new SpiritusNamedPipeClient(_pipeClient);
 
             _spiritusClient.StateChanged += OnPipeStateChangedFromBlah;
@@ -103,11 +125,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
             _pipeClient.StartAsync(CancellationToken.None).Wait();
         }
-    }
-
-    private void OnPipeStateChangedFromBlah(string state)
-    {
-        Dispatcher.UIThread.Post(() => PipeState = state);
     }
 
     private async Task<object?> DoDrawCommand(SpiritusMessage message)
@@ -199,9 +216,9 @@ public partial class MainWindowViewModel : ViewModelBase
                 this.Info = info;
                 break;
 
-            case "OpenFile":
+            case "ShowOpenFileDialog":
                 {
-                    var openFileParams = message.Payload.Deserialize<SPOpenFile>();
+                    var openFileParams = message.Payload.Deserialize<SPOpenFileDialog>();
                     var topLevel = TopLevel.GetTopLevel(_mainWindow);
                     if (topLevel != null)
                     {
@@ -224,9 +241,9 @@ public partial class MainWindowViewModel : ViewModelBase
                             options.FileTypeFilter = filters;
                         }
 
-                        if (!string.IsNullOrEmpty(openFileParams?.Location))
+                        if (!string.IsNullOrEmpty(openFileParams?.SuggestedStartLocation))
                         {
-                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(openFileParams.Location));
+                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(openFileParams.SuggestedStartLocation));
                         }
 
                         var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
@@ -234,8 +251,59 @@ public partial class MainWindowViewModel : ViewModelBase
                     }
                 }
                 break;
+
+            case "ShowSaveFileDialog":
+                {
+                    var saveFileParams = message.Payload.Deserialize<SPSaveFileDialog>();
+                    var topLevel = TopLevel.GetTopLevel(_mainWindow);
+                    if (topLevel != null)
+                    {
+                        var options = new FilePickerSaveOptions
+                        {
+                            Title = saveFileParams?.Title ?? "Open File",
+                            DefaultExtension = saveFileParams?.DefaultExtension,
+                            SuggestedFileName = saveFileParams?.SuggestedFileName,
+                            ShowOverwritePrompt = saveFileParams?.ShowOverwritePrompt ?? false
+                        };
+
+                        //if (saveFileParams.SuggestedFileType is not null)
+                        //{
+                        //    options.SuggestedFileType = new FilePickerFileType(saveFileParams.SuggestedFileType)
+                        //    {
+                        //        Patterns = new List<string>() { $"*.{saveFileParams.SuggestedFileType}" }
+                        //    };
+                        //}
+
+                        if (saveFileParams?.Filters != null && saveFileParams.Filters.Count > 0)
+                        {
+                            var filters = new List<FilePickerFileType>();
+                            foreach (var filter in saveFileParams.Filters)
+                            {
+                                filters.Add(new FilePickerFileType(filter.Name ?? "All Files")
+                                {
+                                    Patterns = filter.Extensions ?? new List<string>()
+                                });
+                            }
+                            options.FileTypeChoices = filters;
+                        }
+
+                        if (!string.IsNullOrEmpty(saveFileParams?.SuggestedStartLocation))
+                        {
+                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(saveFileParams.SuggestedStartLocation));
+                        }
+
+                        var file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+                        result = file?.TryGetLocalPath() ?? null;
+                    }
+                }
+                break;
         }
         return result;
+    }
+
+    private void OnPipeStateChangedFromBlah(string state)
+    {
+        Dispatcher.UIThread.Post(() => PipeState = state);
     }
 
     private async Task OnPostMessageReceived(SpiritusMessage message)

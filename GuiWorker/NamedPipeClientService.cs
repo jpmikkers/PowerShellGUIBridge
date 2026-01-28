@@ -6,9 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
-namespace AvaloniaNamedPipe.ViewModels;
+namespace GuiWorker.ViewModels;
 
-public class NamedPipeClient : BackgroundService
+public class NamedPipeClientService : BackgroundService
 {
     private NamedPipeClientStream? _pipeClientStream;
     private readonly string _pipeName;
@@ -18,7 +18,7 @@ public class NamedPipeClient : BackgroundService
     public event Func<string, Task>? PostMessageReceived;
     public event Func<string, Task<string>>? InvokeMessageReceived;
 
-    public NamedPipeClient(string pipeName, TimeSpan connectionTimeout)
+    public NamedPipeClientService(string pipeName, TimeSpan connectionTimeout)
     {
         _pipeName = pipeName;
         _connectionTimeout = connectionTimeout;
@@ -64,7 +64,7 @@ public class NamedPipeClient : BackgroundService
     {
         while (count > 0)
         {
-            int done = await _pipeClientStream!.ReadAsync(buffer, offset, count, cancellationToken);
+            var done = await _pipeClientStream!.ReadAsync(buffer, offset, count, cancellationToken);
 
             if (done == 0)
             {
@@ -82,9 +82,8 @@ public class NamedPipeClient : BackgroundService
     {
         var header = new byte[8];
         var message = new byte[1024];
-        var throwOnEndOfStream = true;
 
-        while (true)
+        while(!cancellationToken.IsCancellationRequested)
         {
             await MyReadExactly(header, 0, 8, cancellationToken);
 
