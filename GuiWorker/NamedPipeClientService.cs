@@ -10,7 +10,6 @@ namespace GuiWorker.ViewModels;
 
 public class NamedPipeClientService : BackgroundService
 {
-    private NamedPipeClientStream? _pipeClientStream;
     private readonly string _pipeName;
     private readonly TimeSpan _connectionTimeout;
 
@@ -27,44 +26,18 @@ public class NamedPipeClientService : BackgroundService
     protected async override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         OnStateChanged("Connecting");
-
-        try
-        {
-            _pipeClientStream = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
-            // _pipeClientStream.ReadTimeout = Timeout.Infinite;
-            await _pipeClientStream.ConnectAsync(_connectionTimeout, stoppingToken);
-            //(int)TimeSpan.FromSeconds(60).TotalMilliseconds;
-            //_pipeClientStream.WriteTimeout = (int)TimeSpan.FromSeconds(60).TotalMilliseconds;
-        }
-        catch
-        {
-            OnStateChanged("Failed to connect");
-            return;
-        }
-
+        using var pipeClientStream = new NamedPipeClientStream(".", _pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+        await pipeClientStream.ConnectAsync(_connectionTimeout, stoppingToken);
         OnStateChanged("Connected");
-
-        try
-        {
-            await ProcessMessagesAsync(stoppingToken);
-        }
-        catch (Exception ex)
-        {
-            OnStateChanged($"Error: {ex}");
-        }
-        finally
-        {
-            _pipeClientStream?.Dispose();
-            //OnStateChanged("Disconnected");
-        }
+        await ProcessMessagesAsync(pipeClientStream, stoppingToken);
     }
 
     // the .NET NamedPipeClientStream.ReadAtLeast does not function property in linux, so we implement our own version
-    private async Task MyReadExactly(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    private async Task MyReadExactly(PipeStream pipe, byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
         while (count > 0)
         {
-            var done = await _pipeClientStream!.ReadAsync(buffer, offset, count, cancellationToken);
+            var done = await pipe.ReadAsync(buffer, offset, count, cancellationToken);
 
             if (done == 0)
             {
@@ -78,14 +51,17 @@ public class NamedPipeClientService : BackgroundService
         }
     }
 
-    private async Task ProcessMessagesAsync(CancellationToken cancellationToken)
+    private async Task ProcessMessagesAsync(PipeStream pipe, CancellationToken cancellationToken)
     {
+        var responseTag = new byte[] { (byte)'M', (byte)'S', (byte)'G', (byte)'R' };
         var header = new byte[8];
         var message = new byte[1024];
 
-        while(!cancellationToken.IsCancellationRequested)
+        ArgumentNullException.ThrowIfNull(pipe);
+
+        while (!cancellationToken.IsCancellationRequested)
         {
-            await MyReadExactly(header, 0, 8, cancellationToken);
+            await MyReadExactly(pipe, header, 0, 8, cancellationToken);
 
             if (header[0] == 'M' && header[1] == 'S' && header[2] == 'G' && header[3] == 'P')
             {
@@ -96,7 +72,7 @@ public class NamedPipeClientService : BackgroundService
                     message = new byte[messageLength];
                 }
 
-                await MyReadExactly(message, 0, messageLength, cancellationToken);
+                await MyReadExactly(pipe, message, 0, messageLength, cancellationToken);
                 var messageText = Encoding.UTF8.GetString(message.AsSpan(0, messageLength));
                 
                 if (PostMessageReceived != null)
@@ -113,7 +89,7 @@ public class NamedPipeClientService : BackgroundService
                     message = new byte[messageLength];
                 }
 
-                await MyReadExactly(message, 0, messageLength, cancellationToken);
+                await MyReadExactly(pipe,message, 0, messageLength, cancellationToken);
                 var messageText = Encoding.UTF8.GetString(message.AsSpan(0, messageLength));
                 
                 var response = InvokeMessageReceived != null 
@@ -122,13 +98,13 @@ public class NamedPipeClientService : BackgroundService
 
                 var responseBytes = Encoding.UTF8.GetBytes(response);
 
-                await _pipeClientStream.WriteAsync(new byte[] { (byte)'M', (byte)'S', (byte)'G', (byte)'R' }, 0, 4, cancellationToken);
-                await _pipeClientStream.WriteAsync(BitConverter.GetBytes(responseBytes.Length), 0, 4, cancellationToken);
-                await _pipeClientStream.WriteAsync(responseBytes, 0, responseBytes.Length, cancellationToken);
+                await pipe.WriteAsync(responseTag, 0, 4, cancellationToken);
+                await pipe.WriteAsync(BitConverter.GetBytes(responseBytes.Length), 0, 4, cancellationToken);
+                await pipe.WriteAsync(responseBytes, 0, responseBytes.Length, cancellationToken);
             }
             else
             {
-                throw new InvalidOperationException($"Invalid message header (connected: {_pipeClientStream.IsConnected})");
+                throw new InvalidOperationException("Invalid message header");
             }
         }
     }

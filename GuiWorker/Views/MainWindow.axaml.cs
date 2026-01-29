@@ -1,6 +1,7 @@
 using System;
 using Avalonia.Controls;
 using GuiWorker.ViewModels;
+using System.Threading.Tasks;
 
 namespace GuiWorker.Views;
 public partial class MainWindow : Window
@@ -15,7 +16,7 @@ public partial class MainWindow : Window
         base.OnOpened(e);
         if (DataContext is MainWindowViewModel vm)
         {
-            vm.InitializeNamedPipe(this);
+            _ = vm.InitializeNamedPipe(this).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }        
     }
 }

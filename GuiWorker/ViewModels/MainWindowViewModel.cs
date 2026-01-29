@@ -1,86 +1,25 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Shapes;
-using Avalonia.Media;
-using Avalonia.Media.Immutable;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using GuiWorker.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using GuiWorker;
+using GuiWorker.Views;
 
 namespace GuiWorker.ViewModels;
 
-public record class SPFileFilter
-{
-    public string? Name { get; set; }
-    public List<string>? Extensions { get; set; }
-}
-
-public record class SPOpenFileDialog
-{
-    public string? Title { get; set; }
-    public string? SuggestedStartLocation { get; set; }
-    public bool? AllowMultiple { get; set; }
-    public List<SPFileFilter>? Filters { get; set; }
-}
-
-public record class SPSaveFileDialog
-{
-    public string? Title { get; set; }
-    public string? SuggestedStartLocation { get; set; }
-    public string? DefaultExtension { get; set; }
-
-    public string? SuggestedFileName
-    {
-        get; set;
-    }
-
-    public string? SuggestedFileType
-    {
-        get; set;
-    }
-
-    public bool? ShowOverwritePrompt { get; set; }
-
-    public List<SPFileFilter>? Filters { get; set; }
-}
-
 public partial class MainWindowViewModel : ViewModelBase
 {
-#pragma warning disable CA1822 // Mark members as static
-    public string Greeting => "Welcome to Avalonia!";
-#pragma warning restore CA1822 // Mark members as static
-
-    private IBrush _fillBrush = Brushes.LightBlue;
-    private IBrush _strokeBrush = Brushes.LightBlue;
-    private double _strokeThickness = 1.0;
-
     [ObservableProperty]
     private string _pipeState = "idle";
 
     [ObservableProperty]
     private string _info = "idle";
-
-    [ObservableProperty]
-    private string _lastMessage = "";
-
-    [ObservableProperty]
-    private bool _isConnected = false;
-
-    [ObservableProperty]
-    private string _powerShellOutput = "";
 
     public string[]? Args { get; set; }
 
@@ -93,7 +32,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
     }
 
-    public void InitializeNamedPipe(MainWindow mainWindow)
+    public async Task InitializeNamedPipe(MainWindow mainWindow)
     {
         _mainWindow = mainWindow;
         if (Args is not null && Args.Length > 0)
@@ -101,11 +40,21 @@ public partial class MainWindowViewModel : ViewModelBase
             _pipeClient = new NamedPipeClientService(Args[0], TimeSpan.FromSeconds(10.0));
             _spiritusClient = new SpiritusNamedPipeClient(_pipeClient);
 
-            _spiritusClient.StateChanged += OnPipeStateChangedFromBlah;
+            _spiritusClient.StateChanged += OnConnectionStateChanged;
             _spiritusClient.PostMessageReceived += OnPostMessageReceived;
             _spiritusClient.InvokeMessageReceived += OnInvokeMessageReceived;
 
-            _pipeClient.StartAsync(CancellationToken.None).Wait();
+            await _pipeClient.StartAsync(CancellationToken.None);
+
+            _ = _pipeClient.ExecuteTask?.ContinueWith(
+                x => {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _mainWindow?.Close();
+                    });
+                },
+                TaskContinuationOptions.RunContinuationsAsynchronously | TaskContinuationOptions.NotOnRanToCompletion)
+                .ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
     }
 
@@ -120,11 +69,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 break;
 
             case "Sync":
-                break;
-
-            case "Info":
-                var info = message.Payload.Deserialize<string>();
-                this.Info = info;
                 break;
 
             case "ShowOpenFileDialog":
@@ -215,7 +159,7 @@ public partial class MainWindowViewModel : ViewModelBase
         return result;
     }
 
-    private void OnPipeStateChangedFromBlah(string state)
+    private void OnConnectionStateChanged(string state)
     {
         Dispatcher.UIThread.Post(() => PipeState = state);
     }
@@ -230,15 +174,10 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             _ = Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                int count = 0;
                 while (_messageQueue.TryDequeue(out var msg))
                 {
-                    //LastMessage = $"post: {message.Command}";
                     _ = await DoDrawCommand(msg);
-                    count++;
                 }
-
-                //System.Diagnostics.Trace.WriteLine($"Processed {count} queued messages.");
             });
         }
     }

@@ -6,8 +6,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:GuiWorker.ViewModels"
     Title="GuiWorker"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignWidth="300"
+    d:DesignHeight="220"
+    Width="300"
+    Height="220"
     x:DataType="vm:MainWindowViewModel"
     Icon="/Assets/avalonia-logo.ico"
     mc:Ignorable="d">
@@ -21,28 +23,11 @@
     </Design.DataContext>
 
     <DockPanel LastChildFill="True">
-        <TextBlock
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            DockPanel.Dock="Top"
-            Text="{Binding Greeting}" />
-        <Button
-            Margin="5"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Content="Start PS"
-            DockPanel.Dock="Top" />
         <Label
-            HorizontalAlignment="Center"
+            HorizontalAlignment="Left"
             VerticalAlignment="Center"
             Content="{Binding PipeState}"
             DockPanel.Dock="Top" />
-        <Label
-            HorizontalAlignment="Center"
-            VerticalAlignment="Center"
-            Content="{Binding Info}"
-            DockPanel.Dock="Top" />
-        <!--    <Label DockPanel.Dock="Top" Content="{Binding LastMessage}" HorizontalAlignment="Center" VerticalAlignment="Center"/>        -->
         <Canvas Name="MyCanvas" />
     </DockPanel>
 
