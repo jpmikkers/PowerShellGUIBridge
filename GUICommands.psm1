@@ -152,6 +152,28 @@ function Invoke-SaveFileDialog
     return $bridge.InvokeCommand("ShowSaveFileDialog",$payload)
 }
 
+function Invoke-FolderPickerDialog
+{
+    param (
+        [Parameter(Mandatory)]
+        [ValidateNotNull()]
+        [GUIBridge]$bridge,
+        [string]$title = "Select Folder",
+        [string]$location = $null,
+        [string]$suggestedFileName = $null,
+        [bool]$allowMultiple = $false
+    )
+
+    $payload = @{
+        Title = $title
+        SuggestedStartLocation = $location
+        SuggestedFileName = $suggestedFileName
+        AllowMultiple = $allowMultiple
+    }
+
+    return $bridge.InvokeCommand("ShowFolderPickerDialog", $payload)
+}
+
 # see https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/ why we need these
 
 function New-GUIBridge

@@ -6,6 +6,10 @@ try
 {
     $GUIBridge = New-GUIBridge
 
+    $selectedFolder = Invoke-FolderPickerDialog -bridge $GUIBridge -title "Select a folder" -location "C:\"
+
+    "selected folder: $selectedFolder"
+    
     $imageFileFilters = @( 
         @{ Name = 'Images'; Extensions = @('*.jpg', '*.jpeg', '*.bmp') },
         @{ Name = 'All Files'; Extensions = @('*.*') }

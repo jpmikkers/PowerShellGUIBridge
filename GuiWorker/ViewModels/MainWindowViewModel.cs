@@ -153,6 +153,30 @@ public partial class MainWindowViewModel : ViewModelBase
                 }
                 break;
 
+            case "ShowFolderPickerDialog":
+                {
+                    var folderParams = message.Payload.Deserialize<SPFolderPickerDialog>();
+                    var topLevel = TopLevel.GetTopLevel(_mainWindow);
+                    if (topLevel != null)
+                    {
+                        var options = new FolderPickerOpenOptions
+                        {
+                            Title = folderParams?.Title ?? "Select Folder",
+                            AllowMultiple = folderParams?.AllowMultiple ?? false,
+                            SuggestedFileName = folderParams?.SuggestedFileName
+                        };
+
+                        if (!string.IsNullOrEmpty(folderParams?.SuggestedStartLocation))
+                        {
+                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(folderParams.SuggestedStartLocation));
+                        }
+
+                        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(options);
+                        result = folders.Select(x => x.TryGetLocalPath()).Where(x => x is not null).ToList();
+                    }
+                }
+                break;
+
             default:
                 throw new InvalidOperationException($"Unknown command: {message.Command}");
         }
