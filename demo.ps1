@@ -6,7 +6,7 @@ try
 {
     $GUIBridge = New-GUIBridge
 
-    $selectedFolder = Invoke-FolderPickerDialog -bridge $GUIBridge -title "Select a folder" -location "C:\"
+    $selectedFolder = Invoke-FolderPickerDialog -bridge $GUIBridge -title "Select a folder" -suggestedStartLocation $HOME
 
     "selected folder: $selectedFolder"
     
@@ -15,7 +15,7 @@ try
         @{ Name = 'All Files'; Extensions = @('*.*') }
     )
 
-    $imageFiles = Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -location "C:\" -allowMultiple $true -filters $imageFileFilters
+    $imageFiles = Invoke-OpenFileDialog -bridge $GUIBridge -title "Open image file" -suggestedStartLocation $HOME -allowMultiple $true -filters $imageFileFilters
 
     "selected image files: $imageFiles"
 
@@ -24,7 +24,7 @@ try
         @{ Name = 'All Files'; Extensions = @('*.*') }
     )
 
-    $textFile = Invoke-SaveFileDialog -bridge $GUIBridge -title "Save text file" -location "C:\" -SuggestedFileName "howdiedo.txt" -showOverwritePrompt $true -filters $textFileFilters
+    $textFile = Invoke-SaveFileDialog -bridge $GUIBridge -title "Save text file" -suggestedStartLocation $HOME -SuggestedFileName "howdiedo.txt" -showOverwritePrompt $true -filters $textFileFilters
 
     "save text file as: $textFile"
 }

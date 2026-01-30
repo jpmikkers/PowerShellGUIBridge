@@ -113,14 +113,14 @@ function Invoke-OpenFileDialog
         [ValidateNotNull()]
         [GUIBridge]$bridge,
         [string]$title = "Open File",
-        [string]$location = $null,
+        [string]$suggestedStartLocation = $null,
         [bool]$allowMultiple = $false,
         $filters
     )
 
     $payload = @{
         Title = $title
-        SuggestedStartLocation = $location
+        SuggestedStartLocation = $suggestedStartLocation
         AllowMultiple = $allowMultiple
         Filters = $filters
     }
@@ -135,7 +135,7 @@ function Invoke-SaveFileDialog
         [ValidateNotNull()]
         [GUIBridge]$bridge,
         [string]$title = "Save File",
-        [string]$location = $null,
+        [string]$suggestedStartLocation = $null,
         [string]$suggestedFileName = $null,
         [bool]$showOverwritePrompt = $false,
         $filters
@@ -143,7 +143,7 @@ function Invoke-SaveFileDialog
 
     $payload = @{
         Title = $title
-        SuggestedStartLocation = $location
+        SuggestedStartLocation = $suggestedStartlocation
         SuggestedFileName = $suggestedFileName
         ShowOverwritePrompt = $showOverwritePrompt
         Filters = $filters 
@@ -159,14 +159,14 @@ function Invoke-FolderPickerDialog
         [ValidateNotNull()]
         [GUIBridge]$bridge,
         [string]$title = "Select Folder",
-        [string]$location = $null,
+        [string]$suggestedStartLocation = $null,
         [string]$suggestedFileName = $null,
         [bool]$allowMultiple = $false
     )
 
     $payload = @{
         Title = $title
-        SuggestedStartLocation = $location
+        SuggestedStartLocation = $suggestedStartLocation
         SuggestedFileName = $suggestedFileName
         AllowMultiple = $allowMultiple
     }

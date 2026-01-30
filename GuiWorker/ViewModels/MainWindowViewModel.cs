@@ -10,6 +10,8 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GuiWorker.Views;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GuiWorker.ViewModels;
 
@@ -58,6 +60,32 @@ public partial class MainWindowViewModel : ViewModelBase
         }
     }
 
+    private static List<FilePickerFileType>? ConvertFileTypeFilters(List<SPFileFilter>? filters)
+    {
+        if (filters == null || filters.Count == 0)
+        {
+            return null;
+        }
+        var result = new List<FilePickerFileType>();
+        foreach (var filter in filters.Where(x => !string.IsNullOrEmpty(x.Name)))
+        {
+            result.Add(new FilePickerFileType(filter.Name)
+            {
+                Patterns = filter.Extensions ?? new()
+            });
+        }
+        return result;
+    }
+
+    private async Task<IStorageFolder?> ConvertLocation(string? location)
+    {
+        if(string.IsNullOrEmpty(location))
+        {
+            return null;
+        }
+        return await _mainWindow.StorageProvider.TryGetFolderFromPathAsync(new Uri(location));
+    }
+
     private async Task<object?> DoDrawCommand(SpiritusMessage message)
     {
         object? result = null;
@@ -74,106 +102,60 @@ public partial class MainWindowViewModel : ViewModelBase
             case "ShowOpenFileDialog":
                 {
                     var openFileParams = message.Payload.Deserialize<SPOpenFileDialog>();
-                    var topLevel = TopLevel.GetTopLevel(_mainWindow);
-                    if (topLevel != null)
+                    var options = new FilePickerOpenOptions
                     {
-                        var options = new FilePickerOpenOptions
-                        {
-                            Title = openFileParams?.Title ?? "Open File",
-                            AllowMultiple = openFileParams?.AllowMultiple ?? false,
-                        };
+                        Title = openFileParams?.Title ?? "Open File",
+                        AllowMultiple = openFileParams?.AllowMultiple ?? false,
+                        SuggestedFileName = openFileParams?.SuggestedFileName,
+                        FileTypeFilter = ConvertFileTypeFilters(openFileParams?.Filters),
+                        SuggestedStartLocation = await ConvertLocation(openFileParams?.SuggestedStartLocation)
+                    };
 
-                        if (openFileParams?.Filters != null && openFileParams.Filters.Count > 0)
-                        {
-                            var filters = new List<FilePickerFileType>();
-                            foreach (var filter in openFileParams.Filters)
-                            {
-                                filters.Add(new FilePickerFileType(filter.Name ?? "All Files")
-                                {
-                                    Patterns = filter.Extensions ?? new List<string>()
-                                });
-                            }
-                            options.FileTypeFilter = filters;
-                        }
-
-                        if (!string.IsNullOrEmpty(openFileParams?.SuggestedStartLocation))
-                        {
-                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(openFileParams.SuggestedStartLocation));
-                        }
-
-                        var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
-                        result = files.Select(x => x.TryGetLocalPath()).Where(x => x is not null).ToList();
-                    }
+                    var files = await _mainWindow.StorageProvider.OpenFilePickerAsync(options);
+                    result = files.Select(x => x.TryGetLocalPath()).Where(x => x is not null).ToList();
                 }
                 break;
 
             case "ShowSaveFileDialog":
                 {
                     var saveFileParams = message.Payload.Deserialize<SPSaveFileDialog>();
-                    var topLevel = TopLevel.GetTopLevel(_mainWindow);
-                    if (topLevel != null)
+                    var options = new FilePickerSaveOptions
                     {
-                        var options = new FilePickerSaveOptions
-                        {
-                            Title = saveFileParams?.Title ?? "Open File",
-                            DefaultExtension = saveFileParams?.DefaultExtension,
-                            SuggestedFileName = saveFileParams?.SuggestedFileName,
-                            ShowOverwritePrompt = saveFileParams?.ShowOverwritePrompt ?? false
-                        };
+                        Title = saveFileParams?.Title ?? "Open File",
+                        DefaultExtension = saveFileParams?.DefaultExtension,
+                        SuggestedFileName = saveFileParams?.SuggestedFileName,
+                        ShowOverwritePrompt = saveFileParams?.ShowOverwritePrompt ?? false,
+                        FileTypeChoices = ConvertFileTypeFilters(saveFileParams?.Filters),
+                        SuggestedStartLocation = await ConvertLocation(saveFileParams?.SuggestedStartLocation)
+                    };
 
-                        //if (saveFileParams.SuggestedFileType is not null)
-                        //{
-                        //    options.SuggestedFileType = new FilePickerFileType(saveFileParams.SuggestedFileType)
-                        //    {
-                        //        Patterns = new List<string>() { $"*.{saveFileParams.SuggestedFileType}" }
-                        //    };
-                        //}
+                    //if (saveFileParams.SuggestedFileType is not null)
+                    //{
+                    //    options.SuggestedFileType = new FilePickerFileType(saveFileParams.SuggestedFileType)
+                    //    {
+                    //        Patterns = new List<string>() { $"*.{saveFileParams.SuggestedFileType}" }
+                    //    };
+                    //}
 
-                        if (saveFileParams?.Filters != null && saveFileParams.Filters.Count > 0)
-                        {
-                            var filters = new List<FilePickerFileType>();
-                            foreach (var filter in saveFileParams.Filters)
-                            {
-                                filters.Add(new FilePickerFileType(filter.Name ?? "All Files")
-                                {
-                                    Patterns = filter.Extensions ?? new List<string>()
-                                });
-                            }
-                            options.FileTypeChoices = filters;
-                        }
-
-                        if (!string.IsNullOrEmpty(saveFileParams?.SuggestedStartLocation))
-                        {
-                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(saveFileParams.SuggestedStartLocation));
-                        }
-
-                        var file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
-                        result = file?.TryGetLocalPath() ?? null;
-                    }
+                    var file = await _mainWindow.StorageProvider.SaveFilePickerAsync(options);
+                    result = file?.TryGetLocalPath() ?? null;
                 }
                 break;
 
             case "ShowFolderPickerDialog":
                 {
                     var folderParams = message.Payload.Deserialize<SPFolderPickerDialog>();
-                    var topLevel = TopLevel.GetTopLevel(_mainWindow);
-                    if (topLevel != null)
+
+                    var options = new FolderPickerOpenOptions
                     {
-                        var options = new FolderPickerOpenOptions
-                        {
-                            Title = folderParams?.Title ?? "Select Folder",
-                            AllowMultiple = folderParams?.AllowMultiple ?? false,
-                            SuggestedFileName = folderParams?.SuggestedFileName
-                        };
+                        Title = folderParams?.Title ?? "Select Folder",
+                        AllowMultiple = folderParams?.AllowMultiple ?? false,
+                        SuggestedFileName = folderParams?.SuggestedFileName,
+                        SuggestedStartLocation = await ConvertLocation(folderParams?.SuggestedStartLocation)
+                    };
 
-                        if (!string.IsNullOrEmpty(folderParams?.SuggestedStartLocation))
-                        {
-                            options.SuggestedStartLocation = await topLevel.StorageProvider.TryGetFolderFromPathAsync(new Uri(folderParams.SuggestedStartLocation));
-                        }
-
-                        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(options);
-                        result = folders.Select(x => x.TryGetLocalPath()).Where(x => x is not null).ToList();
-                    }
+                    var folders = await _mainWindow.StorageProvider.OpenFolderPickerAsync(options);
+                    result = folders.Select(x => x.TryGetLocalPath()).Where(x => x is not null).ToList();
                 }
                 break;
 
