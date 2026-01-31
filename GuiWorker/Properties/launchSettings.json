@@ -1,15 +1,18 @@
 {
   "profiles": {
-    "AvaloniaNamedPipe": {
-      "commandName": "Project",
-      "commandLineArgs": "plop"
-    },
-    "Profile 1": {
-      "commandName": "Executable"
-    },
     "WSL": {
       "commandName": "WSL2",
       "distributionName": ""
+    },
+    "Run demo.ps1": {
+      "commandName": "Executable",
+      "executablePath": "pwsh",
+      "commandLineArgs": "-NoProfile demo.ps1",
+      "workingDirectory": ".."
+    },
+    "GuiWorker": {
+      "commandName": "Project",
+      "commandLineArgs": "nothing"
     }
   }
 }

@@ -1,3 +1,10 @@
 <Solution>
+  <Folder Name="/PSScripts/">
+    <File Path="../demo.ps1" />
+    <File Path="../GUIBridge.psm1" />
+    <File Path="../GUICommands.psd1" />
+    <File Path="../GUICommands.psm1" />
+    <File Path="../SpiritusChannel.psm1" />
+  </Folder>
   <Project Path="GuiWorker.csproj" />
 </Solution>
