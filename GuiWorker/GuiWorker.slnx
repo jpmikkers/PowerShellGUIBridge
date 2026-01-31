@@ -1,3 +1,7 @@
 <Solution>
+  <Folder Name="/Scripts/">
+    <File Path="../demo.ps1" />
+    <File Path="../GUICommands.psm1" />
+  </Folder>
   <Project Path="GuiWorker.csproj" />
 </Solution>

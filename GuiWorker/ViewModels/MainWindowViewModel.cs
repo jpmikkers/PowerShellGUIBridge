@@ -93,7 +93,7 @@ public partial class MainWindowViewModel : ViewModelBase
         switch (message.Command)
         {
             case "Clear":
-                _mainWindow.MyCanvas.Children.Clear();
+                //_mainWindow.MyCanvas.Children.Clear();
                 break;
 
             case "Sync":
@@ -156,6 +156,43 @@ public partial class MainWindowViewModel : ViewModelBase
 
                     var folders = await _mainWindow.StorageProvider.OpenFolderPickerAsync(options);
                     result = folders.Select(x => x.TryGetLocalPath()).Where(x => x is not null).ToList();
+                }
+                break;
+
+            case "ShowScatterPlot":
+                {
+                    var scatterParams = message.Payload.Deserialize<SPScatterPlot>();
+                    ArgumentNullException.ThrowIfNull(scatterParams, nameof(scatterParams));
+
+                    if (scatterParams.XValues != null && scatterParams.YValues != null && 
+                        scatterParams.XValues.Count > 0 && scatterParams.YValues.Count > 0)
+                    {
+                        var plot = _mainWindow.AvaPlot1.Plot;
+                        plot.Clear();
+
+                        var scatter = plot.Add.Scatter(scatterParams.XValues, scatterParams.YValues);
+                        scatter.LegendText = scatterParams.LegendText ?? "Data";
+                        scatter.MarkerSize = (float)scatterParams.MarkerSize;
+
+                        if (!string.IsNullOrEmpty(scatterParams.Title))
+                        {
+                            plot.Title(scatterParams.Title);
+                        }
+
+                        if (!string.IsNullOrEmpty(scatterParams.XAxisLabel))
+                        {
+                            plot.XLabel(scatterParams.XAxisLabel);
+                        }
+
+                        if (!string.IsNullOrEmpty(scatterParams.YAxisLabel))
+                        {
+                            plot.YLabel(scatterParams.YAxisLabel);
+                        }
+
+                        plot.Axes.AutoScale();
+                        _mainWindow.AvaPlot1.Refresh();
+                        result = "ok";
+                    }
                 }
                 break;
 

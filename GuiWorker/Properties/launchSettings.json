@@ -10,6 +10,12 @@
     "WSL": {
       "commandName": "WSL2",
       "distributionName": ""
+    },
+    "run ps script": {
+      "commandName": "Executable",
+      "executablePath": "pwsh",
+      "commandLineArgs": "-NoProfile .\\demo.ps1",
+      "workingDirectory": "C:\\Users\\mikmak\\Desktop\\swdev\\Repos\\PowerShellGUIBridge"
     }
   }
 }

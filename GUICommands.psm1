@@ -174,6 +174,8 @@ function Invoke-FolderPickerDialog
     return $bridge.InvokeCommand("ShowFolderPickerDialog", $payload)
 }
 
+
+
 # see https://stephanevg.github.io/powershell/class/module/DATA-How-To-Write-powershell-Modules-with-classes/ why we need these
 
 function New-GUIBridge
@@ -192,6 +194,36 @@ function Close-GUIBridge
     {
         $bridge.Dispose()
     }
+}
+
+function Invoke-ScatterPlot
+{
+    param (
+        [Parameter(Mandatory)]
+        [ValidateNotNull()]
+        [GUIBridge]$bridge,
+        [string]$title = $null,
+        [string]$xAxisLabel = $null,
+        [string]$yAxisLabel = $null,
+        [double[]]$xValues = @(),
+        [double[]]$yValues = @(),
+        [string]$legendText = $null,
+        [string]$color = $null,
+        [double]$markerSize = 5.0
+    )
+
+    $payload = @{
+        Title = $title
+        XAxisLabel = $xAxisLabel
+        YAxisLabel = $yAxisLabel
+        XValues = $xValues
+        YValues = $yValues
+        LegendText = $legendText
+        Color = $color
+        MarkerSize = $markerSize
+    }
+
+    return $bridge.InvokeCommand("ShowScatterPlot", $payload)
 }
 
 #Export-ModuleMember -Function New-GUIBridge
